@@ -1,0 +1,2 @@
+Anki smart copy
+===============

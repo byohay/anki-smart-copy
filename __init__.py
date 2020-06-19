@@ -18,6 +18,7 @@ class SmartCopyDefinition:
   blank_out_word_after_copy: bool
   add_only_if_not_empty: bool
   regex_remove: Optional[str] = None
+  blank_out_word_indicator: Optional[str] = None
 
 smart_copy_definitions = [
   SmartCopyDefinition(
@@ -35,7 +36,8 @@ smart_copy_definitions = [
     "Example Sentence w/ Blanked Out Word (optional)",
     True,
     False,
-    r"\[.*?\]"
+    r"\[.*?\]",
+    r".*<b>(.*?)</b>.*"
   )
 ]
 
@@ -73,11 +75,10 @@ def smart_copy(changed, note, current_field_index):
 
     source_value = note_to_copy_from[source]
 
-    if definition.blank_out_word_after_copy:
-      source_value = re.sub(text_to_search, "_" * len(text_to_search), source_value)
-
     if definition.regex_remove:
       source_value = re.sub(definition.regex_remove, "", source_value)
+
+    source_value = _sentence_after_blanking_out_word(source_value, definition, text_to_search)
 
     if source_value not in note[destination]:
       if note[destination] and definition.add_only_if_not_empty:
@@ -91,6 +92,21 @@ def smart_copy(changed, note, current_field_index):
   note.flush()
 
   return True
+
+def _sentence_after_blanking_out_word(source_value, smart_copy_definition, text_to_search):
+  if not smart_copy_definition.blank_out_word_after_copy:
+    return source_value
+
+  if not smart_copy_definition.blank_out_word_indicator:
+    return re.sub(text_to_search, "_" * len(text_to_search), source_value)
+
+  blank_out_match = re.match(smart_copy_definition.blank_out_word_indicator, source_value)
+
+  if not blank_out_match:
+    return re.sub(text_to_search, "_" * len(text_to_search), source_value)
+
+  text_to_blank_out = blank_out_match.group(1)
+  return re.sub(text_to_blank_out, "_" * len(text_to_blank_out), source_value)
 
 def _model_is_correct_type(model):
     '''

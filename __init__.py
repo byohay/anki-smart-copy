@@ -16,6 +16,7 @@ class SmartCopyDefinition:
   source_field_name: str
   destination_field_name: str
   blank_out_word_after_copy: bool
+  add_only_if_not_empty: bool
   regex_remove: Optional[str] = None
 
 smart_copy_definitions = [
@@ -23,15 +24,17 @@ smart_copy_definitions = [
     "sentence",
     "Counter Word, Personal Connection, Full Sentence, Extra Info (Back side)",
     False,
+    False,
     r"\[.*?\]"
   ),
-  SmartCopyDefinition("vocab-audio", "Pronunciation (Recording)", False),
-  SmartCopyDefinition("sentence-audio", "Pronunciation (Recording)", False),
-  SmartCopyDefinition("image", "Picture/Red Front Side", False),
+  SmartCopyDefinition("vocab-audio", "Pronunciation (Recording)", False, False),
+  SmartCopyDefinition("sentence-audio", "Pronunciation (Recording)", False, False),
+  SmartCopyDefinition("image", "Picture/Red Front Side", False, True),
   SmartCopyDefinition(
     "sentence",
     "Example Sentence w/ Blanked Out Word (optional)",
     True,
+    False,
     r"\[.*?\]"
   )
 ]
@@ -77,6 +80,9 @@ def smart_copy(changed, note, current_field_index):
       source_value = re.sub(definition.regex_remove, "", source_value)
 
     if source_value not in note[destination]:
+      if note[destination] and definition.add_only_if_not_empty:
+        continue
+
       if not note[destination]:
         note[destination] = source_value
       else:

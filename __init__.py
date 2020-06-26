@@ -1,6 +1,6 @@
 
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, List, Callable
 import re
 
 from anki.utils import htmlToTextLine
@@ -8,6 +8,25 @@ from aqt import mw, gui_hooks
 from aqt.utils import showInfo
 
 source_field_name = "Word (in Kanji/Hanzi)"
+
+@dataclass(frozen=True)
+class PerCharacterCopyConfiguration:
+  # Name of the field in the reference note to copy from.
+  field_name_to_copy_from: str
+
+  # Name of the model of the reference note to copy from.
+  model_name: str
+
+  # List of fields to copy to. The index in the list corresponds to the index of the character in
+  # the contents of the field `source_field_name`.
+  field_names_to_copy_to: List[str]
+
+  # `True` if the copy should occur only when the field is not empty, `False` in case the copy
+  # should anyway occur.
+  copy_only_if_field_not_empty: bool
+
+  # Function that returns `True` if the character should be searched for and `False` otherwise.
+  filter_characters: Callable[[str], bool] = lambda character: True
 
 @dataclass(frozen=True)
 class SmartCopyDefinition:
@@ -51,6 +70,12 @@ class SmartCopyDefinition:
   # The result would be: `_____bar`.
   blank_out_word_regex: Optional[str] = None
 
+def filter_kanji(character):
+    '''
+    Returns `True` if the character is Kanji, `False` otherwise.
+    '''
+    return ord(character) >= 19968 and ord(character) <= 40879
+
 smart_copy_definitions = [
   SmartCopyDefinition(
     field_name_to_copy_from="sentence",
@@ -92,6 +117,21 @@ smart_copy_definitions = [
   )
 ]
 
+per_character_copy_definitions = [
+  PerCharacterCopyConfiguration(
+    field_name_to_copy_from="Components",
+    filter_characters=filter_kanji,
+    field_names_to_copy_to=[
+      "Extra Info Kanji 1 (component parts/mnemonics for meaning)",
+      "Extra Info Kanji 2 (component parts/mnemonics for meaning)",
+      "Extra Info Kanji 3 (component parts/mnemonics for meaning)",
+      "Extra Info Kanji 4 (component parts/mnemonics for meaning)"
+    ],
+    model_name="KanjiDamage",
+    copy_only_if_field_not_empty=False
+  )
+]
+
 FIELD_SEPARATOR = "\x1f"
 
 def smart_copy(changed, note, current_field_index):
@@ -110,10 +150,6 @@ def smart_copy(changed, note, current_field_index):
     mw.col.db.list("SELECT id FROM notes WHERE flds LIKE " +
                    f"'%{FIELD_SEPARATOR}{text_to_search}{FIELD_SEPARATOR}%'")
   )
-
-  if not reference_cards:
-    showInfo(f"No reference cards found.")
-    return changed
 
   note_changed = False
 
@@ -139,6 +175,48 @@ def smart_copy(changed, note, current_field_index):
     source_value = _sentence_after_blanking_out_word(source_value, definition, text_to_search)
 
     if source_value not in note[destination]:
+      if note[destination] and definition.copy_only_if_field_not_empty:
+        continue
+
+      if not note[destination]:
+        note[destination] = source_value
+      else:
+        note[destination] += "<br>" + source_value
+
+      note_changed = True
+
+  for definition in per_character_copy_definitions:
+    source = definition.field_name_to_copy_from
+
+    index_of_filtered_character = 0
+
+    for character in text_to_search:
+      if not definition.filter_characters(character):
+        continue
+
+      destination = definition.field_names_to_copy_to[index_of_filtered_character]
+      index_of_filtered_character += 1
+
+      reference_cards = (
+        mw.col.db.list("SELECT id FROM notes WHERE flds LIKE " +
+                       f"'%{FIELD_SEPARATOR}{character}{FIELD_SEPARATOR}%'")
+      )
+
+      note_to_copy_from = (
+        _get_note_from_reference_card_with_model(reference_cards, definition.model_name)
+      )
+
+      if note_to_copy_from is None:
+        continue
+
+      if destination not in note or source not in note_to_copy_from:
+        continue
+
+      source_value = note_to_copy_from[source]
+
+      if source_value in note[destination]:
+        continue
+
       if note[destination] and definition.copy_only_if_field_not_empty:
         continue
 

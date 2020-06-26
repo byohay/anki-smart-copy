@@ -53,42 +53,42 @@ class SmartCopyDefinition:
 
 smart_copy_definitions = [
   SmartCopyDefinition(
-    "sentence",
-    "Counter Word, Personal Connection, Full Sentence, Extra Info (Back side)",
-    "Japanese v2-62274-e76b4",
-    False,
-    False,
-    r"\[.*?\]"
+    field_name_to_copy_from="sentence",
+    field_name_to_copy_to="Counter Word, Personal Connection, Full Sentence, Extra Info (Back side)",
+    model_name="Japanese v2-62274-e76b4",
+    blank_out_word_after_copy=False,
+    copy_only_if_field_not_empty=False,
+    regex_remove=r"\[.*?\]"
   ),
   SmartCopyDefinition(
-    "vocab-audio",
-    "Pronunciation (Recording)",
-    "Japanese v2-62274-e76b4",
-    False,
-    False
+    field_name_to_copy_from="vocab-audio",
+    field_name_to_copy_to="Pronunciation (Recording)",
+    model_name="Japanese v2-62274-e76b4",
+    blank_out_word_after_copy=False,
+    copy_only_if_field_not_empty=False
   ),
   SmartCopyDefinition(
-    "sentence-audio",
-    "Pronunciation (Recording)",
-    "Japanese v2-62274-e76b4",
-    False,
-    False
+    field_name_to_copy_from="sentence-audio",
+    field_name_to_copy_to="Pronunciation (Recording)",
+    model_name="Japanese v2-62274-e76b4",
+    blank_out_word_after_copy=False,
+    copy_only_if_field_not_empty=False
   ),
   SmartCopyDefinition(
-    "image",
-    "Picture/Red Front Side",
-    "Japanese v2-62274-e76b4",
-    False,
-    True
+    field_name_to_copy_from="image",
+    field_name_to_copy_to="Picture/Red Front Side",
+    model_name="Japanese v2-62274-e76b4",
+    blank_out_word_after_copy=False,
+    copy_only_if_field_not_empty=True
   ),
   SmartCopyDefinition(
-    "sentence",
-    "Example Sentence w/ Blanked Out Word (optional)",
-    "Japanese v2-62274-e76b4",
-    True,
-    False,
-    r"\[.*?\]",
-    r".*<b>(.*?)</b>.*"
+    field_name_to_copy_from="sentence",
+    field_name_to_copy_to="Example Sentence w/ Blanked Out Word (optional)",
+    model_name="Japanese v2-62274-e76b4",
+    blank_out_word_after_copy=True,
+    copy_only_if_field_not_empty=False,
+    regex_remove=r"\[.*?\]",
+    blank_out_word_regex=r".*<b>(.*?)</b>.*"
   )
 ]
 

@@ -87,6 +87,8 @@ def smart_copy(changed, note, current_field_index):
     showInfo(f"No reference cards found.")
     return changed
 
+  note_changed = False
+
   for definition in smart_copy_definitions:
     source = definition.source_field_name
     destination = definition.destination_field_name
@@ -116,6 +118,11 @@ def smart_copy(changed, note, current_field_index):
         note[destination] = source_value
       else:
         note[destination] += "<br>" + source_value
+
+      note_changed = True
+
+  if not note_changed:
+    return changed
 
   note.flush()
 

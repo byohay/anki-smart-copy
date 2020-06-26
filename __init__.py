@@ -9,12 +9,15 @@ from aqt.utils import showInfo
 
 source_field_name = "Word (in Kanji/Hanzi)"
 
-# TODO: 1. Put image only if it's not empty (Maybe do it for others?).
+# TODO: 1. Identify note somehow.
+#       2. Allow multiple notes to copy from.
+
 
 @dataclass(frozen=True)
 class SmartCopyDefinition:
   source_field_name: str
   destination_field_name: str
+  model_name: str
   blank_out_word_after_copy: bool
   add_only_if_not_empty: bool
   regex_remove: Optional[str] = None
@@ -24,16 +27,36 @@ smart_copy_definitions = [
   SmartCopyDefinition(
     "sentence",
     "Counter Word, Personal Connection, Full Sentence, Extra Info (Back side)",
+    "Japanese v2-62274-e76b4",
     False,
     False,
     r"\[.*?\]"
   ),
-  SmartCopyDefinition("vocab-audio", "Pronunciation (Recording)", False, False),
-  SmartCopyDefinition("sentence-audio", "Pronunciation (Recording)", False, False),
-  SmartCopyDefinition("image", "Picture/Red Front Side", False, True),
+  SmartCopyDefinition(
+    "vocab-audio",
+    "Pronunciation (Recording)",
+    "Japanese v2-62274-e76b4",
+    False,
+    False
+  ),
+  SmartCopyDefinition(
+    "sentence-audio",
+    "Pronunciation (Recording)",
+    "Japanese v2-62274-e76b4",
+    False,
+    False
+  ),
+  SmartCopyDefinition(
+    "image",
+    "Picture/Red Front Side",
+    "Japanese v2-62274-e76b4",
+    False,
+    True
+  ),
   SmartCopyDefinition(
     "sentence",
     "Example Sentence w/ Blanked Out Word (optional)",
+    "Japanese v2-62274-e76b4",
     True,
     False,
     r"\[.*?\]",
@@ -45,15 +68,15 @@ FIELD_SEPARATOR = "\x1f"
 
 def smart_copy(changed, note, current_field_index):
   if not _model_is_correct_type(note.model()):
-    return False
+    return changed
 
   if note.keys()[current_field_index] != source_field_name:
-    return False
+    return changed
 
   text_to_search = htmlToTextLine(mw.col.media.strip(note[source_field_name])).strip()
 
   if not text_to_search:
-    return False
+    return changed
 
   reference_cards = (
     mw.col.db.list("SELECT id FROM notes WHERE flds LIKE " +
@@ -62,15 +85,20 @@ def smart_copy(changed, note, current_field_index):
 
   if not reference_cards:
     showInfo(f"No reference cards found.")
-    return False
-
-  note_to_copy_from = mw.col.getNote(reference_cards[0])
+    return changed
 
   for definition in smart_copy_definitions:
     source = definition.source_field_name
     destination = definition.destination_field_name
 
-    if destination not in note:
+    note_to_copy_from = (
+      _get_note_from_reference_card_with_model(reference_cards, definition.model_name)
+    )
+
+    if note_to_copy_from is None:
+      continue
+
+    if destination not in note or source not in note_to_copy_from:
       continue
 
     source_value = note_to_copy_from[source]
@@ -92,6 +120,15 @@ def smart_copy(changed, note, current_field_index):
   note.flush()
 
   return True
+
+def _get_note_from_reference_card_with_model(reference_cards, model_name):
+  for reference_card in reference_cards:
+    note = mw.col.getNote(reference_card)
+
+    if note.model()["name"] == model_name:
+      return note
+
+  return None
 
 def _sentence_after_blanking_out_word(source_value, smart_copy_definition, text_to_search):
   if not smart_copy_definition.blank_out_word_after_copy:

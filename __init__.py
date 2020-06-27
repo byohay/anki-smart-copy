@@ -7,7 +7,40 @@ from anki.utils import htmlToTextLine
 from aqt import mw, gui_hooks
 from aqt.utils import showInfo
 
-subject_filed_name = "Word (in Kanji/Hanzi)"
+def _create_configuration_from_config():
+  def inner(configuration_dict):
+    whole_text_configurations = [
+      WholeTextConfiguration(
+        model_name=whole_text_configuration["noteType"],
+        field_name_to_copy_from=whole_text_configuration["sourceField"],
+        field_name_to_copy_to=whole_text_configuration["destinationField"],
+        blank_out_word_after_copy=whole_text_configuration["blankOutWordAfterCopy"],
+        copy_only_if_field_empty=whole_text_configuration["copyOnlyIfEmpty"],
+        regex_remove=whole_text_configuration.get("textToRemoveRegex"),
+        blank_out_text_regex=whole_text_configuration.get("blankOutTextRegex")
+      )
+      for whole_text_configuration in configuration_dict["wholeTextSearchConfigurations"]
+    ]
+
+    per_character_configurations = [
+      PerCharacterConfiguration(
+        model_name=per_character_configuration["noteType"],
+        field_name_to_copy_from=per_character_configuration["sourceField"],
+        field_names_to_copy_to=per_character_configuration["destinationFields"],
+        copy_only_if_field_empty=per_character_configuration["copyOnlyIfEmpty"],
+        filter_characters=filter_kanji if per_character_configuration["filterCharacters"] else None
+      )
+      for per_character_configuration in configuration_dict["perCharacterSearchConfigurations"]
+    ]
+
+    return SmartCopyConfiguration(
+      subject_field_name=configuration_dict["subjectField"],
+      whole_text_configurations=whole_text_configurations,
+      per_character_configurations=per_character_configurations
+    )
+
+  config = mw.addonManager.getConfig(__name__)
+  return inner(config)
 
 @dataclass(frozen=True)
 class PerCharacterConfiguration:
@@ -18,7 +51,7 @@ class PerCharacterConfiguration:
   model_name: str
 
   # List of fields to copy to. The index in the list corresponds to the index of the character in
-  # the contents of the field `subject_filed_name`.
+  # the contents of the field `subject_field_name`.
   field_names_to_copy_to: List[str]
 
   # `True` if the copy should occur only when the field is not empty, `False` in case the copy
@@ -39,7 +72,7 @@ class WholeTextConfiguration:
   # Name of the model of the reference note to copy from.
   model_name: str
 
-  # `True` if the contents of the field `subject_filed_name` that appears in the contents of the
+  # `True` if the contents of the field `subject_field_name` that appears in the contents of the
   # field `field_name_to_copy_from` should be blanked out after copying, `False` otherwise.
   #
   # Example:
@@ -76,72 +109,28 @@ def filter_kanji(character):
     '''
     return ord(character) >= 19968 and ord(character) <= 40879
 
-whole_text_configurations = [
-  WholeTextConfiguration(
-    field_name_to_copy_from="sentence",
-    field_name_to_copy_to="Counter Word, Personal Connection, Full Sentence, Extra Info (Back side)",
-    model_name="Japanese v2-62274-e76b4",
-    blank_out_word_after_copy=False,
-    copy_only_if_field_empty=False,
-    regex_remove=r"\[.*?\]"
-  ),
-  WholeTextConfiguration(
-    field_name_to_copy_from="vocab-audio",
-    field_name_to_copy_to="Pronunciation (Recording)",
-    model_name="Japanese v2-62274-e76b4",
-    blank_out_word_after_copy=False,
-    copy_only_if_field_empty=False
-  ),
-  WholeTextConfiguration(
-    field_name_to_copy_from="sentence-audio",
-    field_name_to_copy_to="Pronunciation (Recording)",
-    model_name="Japanese v2-62274-e76b4",
-    blank_out_word_after_copy=False,
-    copy_only_if_field_empty=False
-  ),
-  WholeTextConfiguration(
-    field_name_to_copy_from="image",
-    field_name_to_copy_to="Picture/Red Front Side",
-    model_name="Japanese v2-62274-e76b4",
-    blank_out_word_after_copy=False,
-    copy_only_if_field_empty=True
-  ),
-  WholeTextConfiguration(
-    field_name_to_copy_from="sentence",
-    field_name_to_copy_to="Example Sentence w/ Blanked Out Word (optional)",
-    model_name="Japanese v2-62274-e76b4",
-    blank_out_word_after_copy=True,
-    copy_only_if_field_empty=False,
-    regex_remove=r"\[.*?\]",
-    blank_out_text_regex=r".*<b>(.*?)</b>.*"
-  )
-]
+@dataclass(frozen=True)
+class SmartCopyConfiguration:
+  subject_field_name: str
 
-per_character_copy_configurations = [
-  PerCharacterConfiguration(
-    field_name_to_copy_from="Components",
-    filter_characters=filter_kanji,
-    field_names_to_copy_to=[
-      "Extra Info Kanji 1 (component parts/mnemonics for meaning)",
-      "Extra Info Kanji 2 (component parts/mnemonics for meaning)",
-      "Extra Info Kanji 3 (component parts/mnemonics for meaning)",
-      "Extra Info Kanji 4 (component parts/mnemonics for meaning)"
-    ],
-    model_name="KanjiDamage",
-    copy_only_if_field_empty=False
-  )
-]
+  whole_text_configurations: List[WholeTextConfiguration]
+
+  per_character_configurations: List[PerCharacterConfiguration]
 
 FIELD_SEPARATOR = "\x1f"
 
 def smart_copy(changed, note, current_field_index):
-  if not _model_is_correct_type(note.model()):
+  configuration = _create_configuration_from_config()
+
+  if not _model_is_correct_type(configuration, note.model()):
     return changed
 
-  if note.keys()[current_field_index] != subject_filed_name:
+  if note.keys()[current_field_index] != configuration.subject_field_name:
     return changed
 
-  text_to_search = htmlToTextLine(mw.col.media.strip(note[subject_filed_name])).strip()
+  text_to_search = (
+    htmlToTextLine(mw.col.media.strip(note[configuration.subject_field_name])).strip()
+  )
 
   if not text_to_search:
     return changed
@@ -153,11 +142,13 @@ def smart_copy(changed, note, current_field_index):
 
   note_changed = False
 
-  for configuration in whole_text_configurations:
-    source = configuration.field_name_to_copy_from
-    destination = configuration.field_name_to_copy_to
+  for whole_text_configuration in configuration.whole_text_configurations:
+    source = whole_text_configuration.field_name_to_copy_from
+    destination = whole_text_configuration.field_name_to_copy_to
 
-    note_to_copy_from = _get_note_from_note_id_with_model(note_ids, configuration.model_name)
+    note_to_copy_from = (
+      _get_note_from_note_id_with_model(note_ids, whole_text_configuration.model_name)
+    )
 
     if note_to_copy_from is None:
       continue
@@ -167,13 +158,15 @@ def smart_copy(changed, note, current_field_index):
 
     source_value = note_to_copy_from[source]
 
-    if configuration.regex_remove:
-      source_value = re.sub(configuration.regex_remove, "", source_value)
+    if whole_text_configuration.regex_remove:
+      source_value = re.sub(whole_text_configuration.regex_remove, "", source_value)
 
-    source_value = _sentence_after_blanking_out_word(source_value, configuration, text_to_search)
+    source_value = (
+      _sentence_after_blanking_out_word(source_value, whole_text_configuration, text_to_search)
+    )
 
     if source_value not in note[destination]:
-      if note[destination] and configuration.copy_only_if_field_empty:
+      if note[destination] and whole_text_configuration.copy_only_if_field_empty:
         continue
 
       if not note[destination]:
@@ -183,19 +176,19 @@ def smart_copy(changed, note, current_field_index):
 
       note_changed = True
 
-  for configuration in per_character_copy_configurations:
-    source = configuration.field_name_to_copy_from
+  for per_character_configuration in configuration.per_character_configurations:
+    source = per_character_configuration.field_name_to_copy_from
 
     index_of_filtered_character = 0
 
     for character in text_to_search:
-      if not configuration.filter_characters(character):
+      if not per_character_configuration.filter_characters(character):
         continue
 
-      if index_of_filtered_character >= len(configuration.field_names_to_copy_to):
+      if index_of_filtered_character >= len(per_character_configuration.field_names_to_copy_to):
         break
 
-      destination = configuration.field_names_to_copy_to[index_of_filtered_character]
+      destination = per_character_configuration.field_names_to_copy_to[index_of_filtered_character]
       index_of_filtered_character += 1
 
       note_ids = (
@@ -204,7 +197,7 @@ def smart_copy(changed, note, current_field_index):
       )
 
       note_to_copy_from = (
-        _get_note_from_note_id_with_model(note_ids, configuration.model_name)
+        _get_note_from_note_id_with_model(note_ids, per_character_configuration.model_name)
       )
 
       if note_to_copy_from is None:
@@ -218,7 +211,7 @@ def smart_copy(changed, note, current_field_index):
       if source_value in note[destination]:
         continue
 
-      if note[destination] and configuration.copy_only_if_field_empty:
+      if note[destination] and per_character_configuration.copy_only_if_field_empty:
         continue
 
       if not note[destination]:
@@ -259,12 +252,12 @@ def _sentence_after_blanking_out_word(source_value, whole_word_configuration, te
   text_to_blank_out = blank_out_match.group(1)
   return re.sub(text_to_blank_out, "_" * len(text_to_blank_out), source_value)
 
-def _model_is_correct_type(model):
+def _model_is_correct_type(configuration, model):
     '''
     Returns `True` if model has the subject field (The field with the text to search for), `False`
     otherwise.
     '''
     fields = mw.col.models.fieldNames(model)
-    return subject_filed_name in fields
+    return configuration.subject_field_name in fields
 
 gui_hooks.editor_did_unfocus_field.append(smart_copy)

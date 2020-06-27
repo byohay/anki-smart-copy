@@ -261,17 +261,10 @@ def _sentence_after_blanking_out_word(source_value, whole_word_configuration, te
 
 def _model_is_correct_type(model):
     '''
-    Returns `True` if model has both subject field (The field with the text to search for) and
-    destination field, `False` otherwise.
+    Returns `True` if model has the subject field (The field with the text to search for), `False`
+    otherwise.
     '''
     fields = mw.col.models.fieldNames(model)
-
-    destination_fields_names = (
-      [configuration.field_name_to_copy_to for configuration in whole_text_configurations]
-    )
-
-    return (subject_filed_name in fields and
-      any(destination_field_name in fields
-          for destination_field_name in destination_fields_names))
+    return subject_filed_name in fields
 
 gui_hooks.editor_did_unfocus_field.append(smart_copy)

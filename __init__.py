@@ -99,7 +99,7 @@ class WholeTextConfiguration:
   # Example:
   # - The contents of `source_file_name` = "foo"
   # - The contents of `field_name_to_copy_from` = "<b>fooie</b>bar"
-  # - `blank_out_text_regex` is equal to `r".*<b>(.*?)</b>.*"`.
+  # - `blank_out_text_regex` is equal to `r"<b>(.*?)</b>"`.
   # The result would be: `_____bar`.
   blank_out_text_regex: Optional[str] = None
 
@@ -244,7 +244,9 @@ def _sentence_after_blanking_out_word(source_value, whole_word_configuration, te
   if not whole_word_configuration.blank_out_text_regex:
     return re.sub(text_to_search, "_" * len(text_to_search), source_value)
 
-  blank_out_match = re.match(whole_word_configuration.blank_out_text_regex, source_value)
+  regex_to_search = ".*" + whole_word_configuration.blank_out_text_regex + ".*"
+
+  blank_out_match = re.match(regex_to_search, source_value)
 
   if not blank_out_match:
     return re.sub(text_to_search, "_" * len(text_to_search), source_value)

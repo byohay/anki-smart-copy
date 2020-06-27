@@ -1,0 +1,26 @@
+{
+  "subjectField": "",
+  "wholeTextSearchConfigurations": [
+    {
+      "noteType": "",
+      "sourceField": "",
+      "destinationField": "",
+      "blankOutWordAfterCopy": false,
+      "copyOnlyIfEmpty": false,
+      "textToRemoveRegex": null,
+      "blankOutTextRegex": null
+    }
+  ],
+  "perCharacterSearchConfigurations": [
+    {
+      "noteType": "",
+      "sourceField": "",
+      "destinationFields": [
+        "",
+        ""
+      ],
+      "copyOnlyIfEmpty": false,
+      "filterCharacters": null
+    }
+  ]
+}

@@ -146,7 +146,7 @@ def smart_copy(changed, note, current_field_index):
   if not text_to_search:
     return changed
 
-  reference_cards = (
+  note_ids = (
     mw.col.db.list("SELECT id FROM notes WHERE flds LIKE " +
                    f"'%{FIELD_SEPARATOR}{text_to_search}{FIELD_SEPARATOR}%'")
   )
@@ -157,9 +157,7 @@ def smart_copy(changed, note, current_field_index):
     source = definition.field_name_to_copy_from
     destination = definition.field_name_to_copy_to
 
-    note_to_copy_from = (
-      _get_note_from_reference_card_with_model(reference_cards, definition.model_name)
-    )
+    note_to_copy_from = _get_note_from_note_id_with_model(note_ids, definition.model_name)
 
     if note_to_copy_from is None:
       continue
@@ -197,13 +195,13 @@ def smart_copy(changed, note, current_field_index):
       destination = definition.field_names_to_copy_to[index_of_filtered_character]
       index_of_filtered_character += 1
 
-      reference_cards = (
+      note_ids = (
         mw.col.db.list("SELECT id FROM notes WHERE flds LIKE " +
                        f"'%{FIELD_SEPARATOR}{character}{FIELD_SEPARATOR}%'")
       )
 
       note_to_copy_from = (
-        _get_note_from_reference_card_with_model(reference_cards, definition.model_name)
+        _get_note_from_note_id_with_model(note_ids, definition.model_name)
       )
 
       if note_to_copy_from is None:
@@ -234,9 +232,9 @@ def smart_copy(changed, note, current_field_index):
 
   return True
 
-def _get_note_from_reference_card_with_model(reference_cards, model_name):
-  for reference_card in reference_cards:
-    note = mw.col.getNote(reference_card)
+def _get_note_from_note_id_with_model(note_ids, model_name):
+  for note_id in note_ids:
+    note = mw.col.getNote(note_id)
 
     if note.model()["name"] == model_name:
       return note

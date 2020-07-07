@@ -162,7 +162,7 @@ def smart_copy(changed, note, current_field_index):
       source_value = re.sub(whole_text_configuration.regex_remove, "", source_value)
 
     source_value = (
-      _sentence_after_blanking_out_word(source_value, whole_text_configuration, text_to_search)
+      _source_value_after_blanking_out_word(source_value, whole_text_configuration, text_to_search)
     )
 
     if source_value not in note[destination]:
@@ -237,22 +237,27 @@ def _get_note_from_note_id_with_model(note_ids, model_name):
 
   return None
 
-def _sentence_after_blanking_out_word(source_value, whole_word_configuration, text_to_search):
+def _source_value_after_blanking_out_word(source_value, whole_word_configuration, text_to_search):
   if not whole_word_configuration.blank_out_word_after_copy:
     return source_value
 
   if not whole_word_configuration.blank_out_text_regex:
     return re.sub(text_to_search, "_" * len(text_to_search), source_value)
 
-  regex_to_search = ".*" + whole_word_configuration.blank_out_text_regex + ".*"
+  regex_to_search = ".*(" + whole_word_configuration.blank_out_text_regex + ").*"
 
   blank_out_match = re.match(regex_to_search, source_value)
 
   if not blank_out_match:
     return re.sub(text_to_search, "_" * len(text_to_search), source_value)
 
-  text_to_blank_out = blank_out_match.group(1)
-  return re.sub(text_to_blank_out, "_" * len(text_to_blank_out), source_value)
+  text_to_blank_out = blank_out_match.group(2)
+  source_text_to_be_replaced = blank_out_match.group(1)
+
+  text_to_replace_after_blanking_out_word = (
+    re.sub(text_to_blank_out, "_" * len(text_to_blank_out), source_text_to_be_replaced)
+  )
+  return re.sub(text_to_replace_after_blanking_out_word, source_text_to_be_replaced, source_value)
 
 def _model_is_correct_type(configuration, model):
     '''

@@ -60,7 +60,7 @@ Copies the text of the field named `sentence` from a note of type `Japanese v2-6
 - `blankOutWordAfterCopy`: If the text in the subject field appears in the text of `fieldToCopyFrom` and this flag is set to `true`, then this sub-text will be replaced with `_` in `fieldToCopyTo`. See also `blankOutRegex`.
 - `copyOnlyIfEmpty`: If this is set to `true`, copies the text only if `destinationField` is empty.
 - `textToRemoveRegex`: Removes all the instances that match this regular expression from the text in `sourceField` before copying it to `destinationField`. Defaults to not removing any text.
-- `blankOutTextRegex`: Instead of blanking out the exact text in `subjectField`, blank out the first match of this regex in the text of `destinationField`. `blankOutWordAfterCopy` must be set to `true` for this to work. Defaults to not manipulating the text.
+- `blankOutTextRegex`: Instead of blanking out the exact text in `subjectField`, blank out the first match of this regex in the text of `destinationField` (That is, the match inside the parenthesis). `blankOutWordAfterCopy` must be set to `true` for this to work. Defaults to not manipulating the text.
 
 ### Per character search
 
@@ -153,7 +153,7 @@ This is the configuration I use for myself:
         "textToRemoveRegex": null
       },
       {
-        "blankOutTextRegex": "<b>(.*?)</b>",
+        "blankOutTextRegex": "<b>\\s*?(\\S*?)<\/b>",
         "blankOutWordAfterCopy": true,
         "copyOnlyIfEmpty": false,
         "destinationField": "Example Sentence w/ Blanked Out Word (optional)",

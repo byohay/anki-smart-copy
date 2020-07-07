@@ -146,14 +146,15 @@ def smart_copy(changed, note, current_field_index):
     source = whole_text_configuration.field_name_to_copy_from
     destination = whole_text_configuration.field_name_to_copy_to
 
+    if destination not in note or \
+        (note[destination] and whole_text_configuration.copy_only_if_field_empty):
+      continue
+
     note_to_copy_from = (
       _get_note_from_note_id_with_model(note_ids, whole_text_configuration.model_name)
     )
 
-    if note_to_copy_from is None:
-      continue
-
-    if destination not in note or source not in note_to_copy_from:
+    if note_to_copy_from is None or source not in note_to_copy_from:
       continue
 
     source_value = note_to_copy_from[source]
@@ -166,15 +167,14 @@ def smart_copy(changed, note, current_field_index):
     )
 
     if _source_exists_in_destination(source_value, note[destination]):
-      if note[destination] and whole_text_configuration.copy_only_if_field_empty:
-        continue
+      continue
 
-      if not note[destination]:
-        note[destination] = source_value
-      else:
-        note[destination] += "<br>" + source_value
+    if not note[destination]:
+      note[destination] = source_value
+    else:
+      note[destination] += "<br>" + source_value
 
-      note_changed = True
+    note_changed = True
 
   for per_character_configuration in configuration.per_character_configurations:
     source = per_character_configuration.field_name_to_copy_from
@@ -191,6 +191,10 @@ def smart_copy(changed, note, current_field_index):
       destination = per_character_configuration.field_names_to_copy_to[index_of_filtered_character]
       index_of_filtered_character += 1
 
+      if destination not in note or \
+          (note[destination] and per_character_configuration.copy_only_if_field_empty):
+        continue
+
       note_ids = (
         mw.col.db.list("SELECT id FROM notes WHERE flds LIKE " +
                        f"'%{FIELD_SEPARATOR}{character}{FIELD_SEPARATOR}%'")
@@ -200,18 +204,12 @@ def smart_copy(changed, note, current_field_index):
         _get_note_from_note_id_with_model(note_ids, per_character_configuration.model_name)
       )
 
-      if note_to_copy_from is None:
-        continue
-
-      if destination not in note or source not in note_to_copy_from:
+      if note_to_copy_from is None or source not in note_to_copy_from:
         continue
 
       source_value = note_to_copy_from[source]
 
       if _source_exists_in_destination(source_value, note[destination]):
-        continue
-
-      if note[destination] and per_character_configuration.copy_only_if_field_empty:
         continue
 
       if not note[destination]:
@@ -254,10 +252,7 @@ def _source_value_after_blanking_out_word(source_value, whole_word_configuration
   text_to_blank_out = blank_out_match.group(2)
   source_text_to_be_replaced = blank_out_match.group(1)
 
-  text_to_replace_after_blanking_out_word = (
-    re.sub(text_to_blank_out, "_" * len(text_to_blank_out), source_text_to_be_replaced)
-  )
-  return re.sub(text_to_replace_after_blanking_out_word, source_text_to_be_replaced, source_value)
+  return re.sub(source_text_to_be_replaced, "_" * len(text_to_blank_out), source_value)
 
 def _model_is_correct_type(configuration, model):
   '''

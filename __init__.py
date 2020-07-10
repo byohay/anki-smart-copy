@@ -165,7 +165,7 @@ def smart_copy(changed, note, current_field_index):
       _source_value_after_blanking_out_word(source_value, whole_text_configuration, text_to_search)
     )
 
-    if source_value not in note[destination]:
+    if _source_exists_in_destination(source_value, note[destination]):
       if note[destination] and whole_text_configuration.copy_only_if_field_empty:
         continue
 
@@ -208,7 +208,7 @@ def smart_copy(changed, note, current_field_index):
 
       source_value = note_to_copy_from[source]
 
-      if source_value in note[destination]:
+      if _source_exists_in_destination(source_value, note[destination]):
         continue
 
       if note[destination] and per_character_configuration.copy_only_if_field_empty:
@@ -260,11 +260,18 @@ def _source_value_after_blanking_out_word(source_value, whole_word_configuration
   return re.sub(text_to_replace_after_blanking_out_word, source_text_to_be_replaced, source_value)
 
 def _model_is_correct_type(configuration, model):
-    '''
-    Returns `True` if model has the subject field (The field with the text to search for), `False`
-    otherwise.
-    '''
-    fields = mw.col.models.fieldNames(model)
-    return configuration.subject_field_name in fields
+  '''
+  Returns `True` if model has the subject field (The field with the text to search for), `False`
+  otherwise.
+  '''
+  fields = mw.col.models.fieldNames(model)
+  return configuration.subject_field_name in fields
+
+def _source_exists_in_destination(source_value, destination_value):
+  # For some reason, after focusing on a field, the image HTML tags in it turn from
+  # `<img src="foo.jpg" />` to `<img src="foo.jpg">`. The solution to this is to remove `/` from the
+  # `source_value` and see if the result appears in `destination_value`.
+  source_value_without_backslash = re.sub(r" ?/>", ">", source_value)
+  return source_value in destination_value or source_value_without_backslash in destination_value
 
 gui_hooks.editor_did_unfocus_field.append(smart_copy)

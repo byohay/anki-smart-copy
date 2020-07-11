@@ -89,7 +89,7 @@ Searches the text in the subject field on a per-character basis, searching only 
 
 - `noteType`: Type of the note to copy the text from. If a note with this type wasn't found, no copy will occur.
 - `sourceField`: Name of the field to copy the text from. If a field with this name wasn't found, no copy will occur.
-- `filterCharacters`: A function used to filter characters to search for. Returns `True` if the character should be searched for, `False` otherwise. Doesn't filter any character by default.
+- `filterCharacters`: If specified, filters characters to search for. Currently, supports only `FILTER_KANJI`.
 - `destinationFields`: A list of field names in the currently edited note. Each field is a destination for a character that was searched for (i.e. a character filtered by `filter_characters`). If the number of fields here is shorter than the list of characters to search for, only the characters up to the number of fields will be copied.
 - `copyOnlyIfEmpty`: If this is set to `true`, copies the text only if `destinationField` is empty.
 

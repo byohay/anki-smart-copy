@@ -222,7 +222,8 @@ def smart_copy(changed, note, current_field_index):
   if not note_changed:
     return changed
 
-  note.flush()
+  if note.id != 0:
+      note.flush()
 
   return True
 

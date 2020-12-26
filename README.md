@@ -99,70 +99,68 @@ This is the configuration I use for myself:
 
 ```json
 {
-  "config": {
-    "perCharacterSearchConfigurations": [
-      {
-        "copyOnlyIfEmpty": false,
-        "destinationFields": [
-          "Extra Info Kanji 1 (component parts/mnemonics for meaning)",
-          "Extra Info Kanji 2 (component parts/mnemonics for meaning)",
-          "Extra Info Kanji 3 (component parts/mnemonics for meaning)",
-          "Extra Info Kanji 4 (component parts/mnemonics for meaning)"
-        ],
-        "filterCharacters": "FILTER_KANJI",
-        "noteType": "KanjiDamage",
-        "sourceField": "Components"
-      }
-    ],
-    "subjectField": "Word (in Kanji/Hanzi)",
-    "wholeTextSearchConfigurations": [
-      {
-        "blankOutTextRegex": null,
-        "blankOutWordAfterCopy": false,
-        "copyOnlyIfEmpty": false,
-        "destinationField": "Counter Word, Personal Connection, Full Sentence, Extra Info (Back side)",
-        "noteType": "Japanese v2-62274-e76b4",
-        "sourceField": "sentence",
-        "textToRemoveRegex": "\\[.*?\\]"
-      },
-      {
-        "blankOutTextRegex": null,
-        "blankOutWordAfterCopy": false,
-        "copyOnlyIfEmpty": false,
-        "destinationField": "Pronunciation (Recording)",
-        "noteType": "Japanese v2-62274-e76b4",
-        "sourceField": "vocab-audio",
-        "textToRemoveRegex": null
-      },
-      {
-        "blankOutTextRegex": null,
-        "blankOutWordAfterCopy": false,
-        "copyOnlyIfEmpty": false,
-        "destinationField": "Pronunciation (Recording)",
-        "noteType": "Japanese v2-62274-e76b4",
-        "sourceField": "sentence-audio",
-        "textToRemoveRegex": null
-      },
-      {
-        "blankOutTextRegex": null,
-        "blankOutWordAfterCopy": false,
-        "copyOnlyIfEmpty": true,
-        "destinationField": "Picture/Red Front Side",
-        "noteType": "Japanese v2-62274-e76b4",
-        "sourceField": "image",
-        "textToRemoveRegex": null
-      },
-      {
-        "blankOutTextRegex": "<b>\\s*?(\\S*?)<\/b>",
-        "blankOutWordAfterCopy": true,
-        "copyOnlyIfEmpty": false,
-        "destinationField": "Example Sentence w/ Blanked Out Word (optional)",
-        "noteType": "Japanese v2-62274-e76b4",
-        "sourceField": "sentence",
-        "textToRemoveRegex": "\\[.*?\\]"
-      }
-    ]
-  }
+  "perCharacterSearchConfigurations": [
+    {
+      "copyOnlyIfEmpty": false,
+      "destinationFields": [
+        "Extra Info Kanji 1 (component parts/mnemonics for meaning)",
+        "Extra Info Kanji 2 (component parts/mnemonics for meaning)",
+        "Extra Info Kanji 3 (component parts/mnemonics for meaning)",
+        "Extra Info Kanji 4 (component parts/mnemonics for meaning)"
+      ],
+      "filterCharacters": "FILTER_KANJI",
+      "noteType": "KanjiDamage",
+      "sourceField": "Components"
+    }
+  ],
+  "subjectField": "Word (in Kanji/Hanzi)",
+  "wholeTextSearchConfigurations": [
+    {
+      "blankOutTextRegex": null,
+      "blankOutWordAfterCopy": false,
+      "copyOnlyIfEmpty": false,
+      "destinationField": "Counter Word, Personal Connection, Full Sentence, Extra Info (Back side)",
+      "noteType": "Japanese v2-62274-e76b4",
+      "sourceField": "sentence",
+      "textToRemoveRegex": "\\[.*?\\]"
+    },
+    {
+      "blankOutTextRegex": null,
+      "blankOutWordAfterCopy": false,
+      "copyOnlyIfEmpty": false,
+      "destinationField": "Pronunciation (Recording)",
+      "noteType": "Japanese v2-62274-e76b4",
+      "sourceField": "vocab-audio",
+      "textToRemoveRegex": null
+    },
+    {
+      "blankOutTextRegex": null,
+      "blankOutWordAfterCopy": false,
+      "copyOnlyIfEmpty": false,
+      "destinationField": "Pronunciation (Recording)",
+      "noteType": "Japanese v2-62274-e76b4",
+      "sourceField": "sentence-audio",
+      "textToRemoveRegex": null
+    },
+    {
+      "blankOutTextRegex": null,
+      "blankOutWordAfterCopy": false,
+      "copyOnlyIfEmpty": true,
+      "destinationField": "Picture/Red Front Side",
+      "noteType": "Japanese v2-62274-e76b4",
+      "sourceField": "image",
+      "textToRemoveRegex": null
+    },
+    {
+      "blankOutTextRegex": "<b>\\s*?(\\S*?)<\/b>",
+      "blankOutWordAfterCopy": true,
+      "copyOnlyIfEmpty": false,
+      "destinationField": "Example Sentence w/ Blanked Out Word (optional)",
+      "noteType": "Japanese v2-62274-e76b4",
+      "sourceField": "sentence",
+      "textToRemoveRegex": "\\[.*?\\]"
+    }
+  ]
 }
 ```
 

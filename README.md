@@ -152,6 +152,24 @@ This is the configuration I use for myself:
       "textToRemoveRegex": null
     },
     {
+      "blankOutTextRegex": null,
+      "blankOutWordAfterCopy": false,
+      "copyOnlyIfEmpty": true,
+      "destinationField": "English Word (Hidden)",
+      "noteType": "Japanese v2-62274-e76b4",
+      "sourceField": "vocab-translation",
+      "textToRemoveRegex": null
+    },
+    {
+      "blankOutTextRegex": null,
+      "blankOutWordAfterCopy": false,
+      "copyOnlyIfEmpty": true,
+      "destinationField": "English Sentence (Hidden)",
+      "noteType": "Japanese v2-62274-e76b4",
+      "sourceField": "sentence-translation",
+      "textToRemoveRegex": null
+    },
+    {
       "blankOutTextRegex": "<b>\\s*?(\\S*?)<\/b>",
       "blankOutWordAfterCopy": true,
       "copyOnlyIfEmpty": false,

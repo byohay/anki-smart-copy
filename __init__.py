@@ -28,7 +28,9 @@ def _create_configuration_from_config():
         field_name_to_copy_from=per_character_configuration["sourceField"],
         field_names_to_copy_to=per_character_configuration["destinationFields"],
         copy_only_if_field_empty=per_character_configuration["copyOnlyIfEmpty"],
-        filter_characters=filter_kanji if per_character_configuration["filterCharacters"] else None
+        filter_characters=
+          filter_kanji if per_character_configuration["filterCharacters"] == "FILTER_KANJI"
+          else lambda character: True
       )
       for per_character_configuration in configuration_dict["perCharacterSearchConfigurations"]
     ]
@@ -59,7 +61,7 @@ class PerCharacterConfiguration:
   copy_only_if_field_empty: bool
 
   # Function that returns `True` if the character should be searched for and `False` otherwise.
-  filter_characters: Callable[[str], bool] = lambda character: True
+  filter_characters: Callable[[str], bool]
 
 @dataclass(frozen=True)
 class WholeTextConfiguration:
